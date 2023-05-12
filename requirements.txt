@@ -1,0 +1,4 @@
+disnake==2.8.1
+loguru==0.7.0
+redis==4.5.5
+python-dotenv==1.0.0
