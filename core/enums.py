@@ -1,4 +1,8 @@
 from enum import Enum, IntFlag, auto
+from core import CycleStepInfo
+
+
+s = " делает свой выбор"
 
 
 class PlayerRole(IntFlag):
@@ -77,20 +81,14 @@ class ChoiceType(IntFlag):
     MANIAC_KILL = auto()
 
 
-class TimerType(Enum):
-    VOTE = auto()
-    WAITING = auto()
-    VOTE_STR = "max_voting_time"
-    PREVOTE = "max_prevoting_time"
-
-
-class CycleTimer(IntFlag):
-    NIGHT_GREETINGS = auto()
-    NIGHT_MAFIA = auto()
-    NIGHT_SENIOR = auto()
-    NIGHT_MEDIC = auto()
-    NIGHT_HARLOT = auto()
-    NIGHT_DETECTIVE = auto()
-    NIGHT_MANIAC = auto()
-    DAY_PREVOTE = auto()
-    DAY_VOTE = auto()
+class CycleTimer(Enum):
+    NIGHT_GREETINGS = CycleStepInfo("Ознакомительная ночь")
+    DAY_GREETINGS = CycleStepInfo("Ознакомительный день", True)
+    NIGHT_MAFIA = CycleStepInfo("Мафия " + s, True)
+    NIGHT_SENIOR = CycleStepInfo("Дон мафии" + s)
+    NIGHT_MEDIC = CycleStepInfo("Медик" + s)
+    NIGHT_HARLOT = CycleStepInfo("Путана" + s)
+    NIGHT_DETECTIVE = CycleStepInfo("Детектив" + s)
+    NIGHT_MANIAC = CycleStepInfo("Маньяк" + s)
+    DAY_PREVOTE = CycleStepInfo("Дневное обсуждение", True, True)
+    DAY_VOTE = CycleStepInfo("Дневное голосование")

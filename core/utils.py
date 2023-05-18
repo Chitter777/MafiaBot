@@ -1,8 +1,5 @@
-import asyncio
-import json
-
 import redis
-from core import AllVoted, TimerType
+from typing import Union
 
 
 class Between:
@@ -26,7 +23,7 @@ class Utils:
     def calc_mafia(pl_len: int) -> int:
         """
         Вычисление нужного количества мафии для игры, согласно количеству игроков
-        :param pl_len:
+        :param pl_len: Количество игроков в игре
         :return:
         """
         if pl_len in Between(3, 5):
@@ -40,16 +37,30 @@ class Utils:
         return max_mafia
 
     @staticmethod
-    async def vote_timer(
-        sec: int, msg_id: str, redis_con: redis.Redis, vtype: TimerType
-    ):
-        async with asyncio.timeout(sec):
-            for i in range(sec):
-                match vtype:
-                    case TimerType.VOTE:
-                        data = json.loads(await redis_con.get(msg_id))
-                        if len(data["voted"]) == data["required_votes_count"]:
-                            raise AllVoted("Все проголосовали")
-                    case TimerType.WAITING:
-                        pass
-                await asyncio.sleep(1)
+    def match_lists(_o: list, _l: list, return_bool: bool = True) -> Union[bool, list]:
+        """
+
+        :param _o: Список, элементы которого нужно найти в другом списке.
+        :param _l: Список, в котором нудно найти необходимые элементы.
+        :param return_bool: Нужно ли вернуть список всех совпадений или всего лишь логическое значение.
+        :return: Логиеское значение (return_bool=True), Список совпадений (return_bool=False)
+        """
+        if return_bool:
+            for _item in _o:
+                if _item in _l:
+                    return True
+            return False
+        else:
+            _response = []
+            for _item in _o:
+                if _item in _l:
+                    _response.append(_item)
+            return _response
+
+    # @staticmethod
+    # async def calc_game(data: dict):
+    #     """
+    #
+    #     :param data: Данные, для генерации списка
+    #     :return:
+    #     """

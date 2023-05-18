@@ -12,11 +12,10 @@ from core import (
     PlayerRole,
     PlayerRoleEmoji,
     PlayerRoleName,
-    Tasks,
-    TimerType,
     Utils,
     CycleTimer,
 )
+import ext.views as views
 from disnake.ext import commands
 from loguru import logger
 
@@ -203,7 +202,7 @@ class OnBttClick(commands.Cog):
                         read_messages=False, send_messages=False
                     ),
                     role: disnake.PermissionOverwrite(
-                        read_messages=True, send_messages=True
+                        read_messages=True, send_messages=False
                     ),
                 }
                 for member in players.keys():
@@ -211,6 +210,16 @@ class OnBttClick(commands.Cog):
                     await member.add_roles(
                         role, reason="Выдача роли доступа для игры в мафию"
                     )
+                vote_channel = await game_category.create_text_channel(
+                    name="голосование", resaon="", overwrites=perms
+                )
+                perms.update(
+                    {
+                        role: disnake.PermissionOverwrite(
+                            read_messages=True, send_messages=True
+                        )
+                    }
+                )
                 square_channel = await game_category.create_text_channel(
                     name="площадь",
                     reason=f"Создание главной комнаты игры",
@@ -252,7 +261,7 @@ class OnBttClick(commands.Cog):
                     description=self.cycle["start_all"],
                     colour=disnake.Color.dark_blue(),
                 )
-                await square_channel.send(
+                await vote_channel.send(
                     content=role.mention,
                     embed=embed,
                     components=[
@@ -264,38 +273,26 @@ class OnBttClick(commands.Cog):
                         )
                     ],
                 )
-                data["mafia_channel"] = mafia_channel.id
-                data["square_channel"] = square_channel.id
-                data["game_category"] = game_category.id
+                data["game_channels"] = {
+                    "category": game_category.id,
+                    "vote": vote_channel.id,
+                    "square": square_channel.id,
+                    "mafia": mafia_channel.id,
+                }
                 data["game_role"] = role.id
                 data["isEnd"] = False
                 data.pop("max_players")
                 await self.bot.redis.delete(str(inter.message.id))
                 await self.bot.redis.set(str(game_category.id), json.dumps(data))
-                # while not data["isEnd"]:
-                #     data["voted"] = {}
-                #     await self.bot.redis.set(str(game_category.id), json.dumps(data))
-                #     dc = CycleTimer(data["cycle"])
-                #     for i in CycleTimer.__members__.keys():
-                #         if CycleTimer[i] in dc:
-                #             ttype = TimerType.WAITING
-                #         break
-                #
-                #     await asyncio.create_task(
-                #         Tasks.game_loop_task(
-                #             client=self.bot,
-                #             key=str(game_category.id),
-                #             ttype=ttype,
-                #             vtype=TimerType.PREVOTE,
-                #         ),
-                #         name=str(game_category.id),
-                #     )
-                #     data = json.loads(await self.bot.redis.get(str(game_category.id)))
-                await asyncio.sleep(100)
-                await self.bot.redis.delete(str(game_category.id))
-                await mafia_channel.delete()
-                await square_channel.delete()
-                await role.delete()
+
+                msg = await vote_channel.send(
+                    content="Подождите, идёт генерация выбора"
+                )
+                view = views.VoteSelectView(
+                    redis_con=self.bot.redis,
+                    timeout=15,
+                )
+                view.set_msg_view()
             else:
                 return await inter.send("✋ Вы не создатель этой игры!", ephemeral=True)
         elif icci == "check_role":

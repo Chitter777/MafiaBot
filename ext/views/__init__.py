@@ -1,0 +1,1 @@
+from .voteview import VoteSelectView
