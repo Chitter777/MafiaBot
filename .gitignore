@@ -3,3 +3,8 @@
 /workspace.xml
 .env
 config.json
+*.pyc
+__pycache__
+.idea
+.git
+.gitignore
